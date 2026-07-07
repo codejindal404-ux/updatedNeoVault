@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>NeoVault - AI Document Vault & Intelligent Form Autofill Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+</style>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface": "#0f131d",
+          "on-surface-variant": "#bbc9cf",
+          "outline": "#859399",
+          "surface-container-lowest": "#0a0e18",
+          "tertiary-fixed-dim": "#4edea3",
+          "on-tertiary": "#003824",
+          "secondary-container": "#6e208c",
+          "on-primary-fixed": "#001f28",
+          "primary": "#a4e6ff",
+          "surface-bright": "#353944",
+          "primary-fixed-dim": "#4cd6ff",
+          "on-tertiary-container": "#005a3c",
+          "on-secondary-container": "#e498ff",
+          "on-error": "#690005",
+          "tertiary": "#68f5b8",
+          "surface-container": "#1c1f2a",
+          "on-error-container": "#ffdad6",
+          "on-secondary-fixed": "#320046",
+          "on-primary-fixed-variant": "#004e60",
+          "inverse-surface": "#dfe2f1",
+          "secondary": "#edb1ff",
+          "surface-tint": "#4cd6ff",
+          "tertiary-container": "#46d89d",
+          "on-primary-container": "#00566a",
+          "surface-dim": "#0f131d",
+          "on-background": "#dfe2f1",
+          "on-secondary-fixed-variant": "#6e208c",
+          "inverse-on-surface": "#2c303b",
+          "primary-fixed": "#b7eaff",
+          "error": "#ffb4ab",
+          "on-tertiary-fixed": "#002113",
+          "secondary-fixed": "#f9d8ff",
+          "surface-container-low": "#171b26",
+          "outline-variant": "#3c494e",
+          "surface-container-highest": "#313540",
+          "surface-variant": "#313540",
+          "secondary-fixed-dim": "#edb1ff",
+          "background": "#0f131d",
+          "error-container": "#93000a",
+          "on-secondary": "#520070",
+          "inverse-primary": "#00677f",
+          "on-surface": "#dfe2f1",
+          "on-tertiary-fixed-variant": "#005236",
+          "tertiary-fixed": "#6ffbbe",
+          "primary-container": "#00d1ff",
+          "on-primary": "#003543",
+          "surface-container-high": "#262a35"
+        },
+        borderRadius: {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        spacing: {
+          "margin-desktop": "40px",
+          "margin-mobile": "16px",
+          "xl": "80px",
+          "md": "24px",
+          "xs": "4px",
+          "lg": "48px",
+          "sm": "12px",
+          "gutter": "24px",
+          "base": "8px",
+          "container-max": "1440px"
+        },
+        fontFamily: {
+          "label-caps": ["JetBrains Mono"],
+          "label-md": ["Geist"],
+          "body-md": ["Geist"],
+          "body-sm": ["Geist"],
+          "headline-xl": ["Geist"],
+          "body-lg": ["Geist"],
+          "headline-lg": ["Geist"],
+          "headline-md": ["Geist"],
+          "headline-lg-mobile": ["Geist"]
+        },
+        fontSize: {
+          "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "500" }],
+          "label-md": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+          "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+          "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+          "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+          "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+          "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+          "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+          "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  html, body { background: #0f131d; margin: 0; }
+  #root { min-height: 100vh; }
+  .glass-panel, .glass-card {
+    background-color: rgba(15, 19, 29, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .glow-hover:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 209, 255, 0.15);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #a4e6ff, #edb1ff);
+    box-shadow: 0 0 8px rgba(164, 230, 255, 0.3);
+    color: #001f28;
+  }
+  .btn-primary:hover { box-shadow: 0 0 16px rgba(164, 230, 255, 0.5); }
+  .glow-btn {
+    background: linear-gradient(90deg, #a4e6ff 0%, #edb1ff 100%);
+    box-shadow: 0 0 15px rgba(0, 209, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+  .glow-btn:hover {
+    box-shadow: 0 0 25px rgba(0, 209, 255, 0.6);
+    transform: translateY(-1px);
+  }
+  .input-field {
+    background: rgba(49, 53, 64, 0.4);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .input-field:focus {
+    border-color: #a4e6ff;
+    box-shadow: inset 0 0 10px rgba(164, 230, 255, 0.1);
+    outline: none;
+  }
+  .bg-glow-1 { background: radial-gradient(circle at 20% 30%, rgba(164, 230, 255, 0.15) 0%, transparent 40%); }
+  .bg-glow-2 { background: radial-gradient(circle at 80% 70%, rgba(110, 32, 140, 0.2) 0%, transparent 40%); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+</style>
+</head>
+<body class="bg-background text-on-surface font-body-md">
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
