@@ -1,41 +1,58 @@
-# NeoVault Frontend
+NeoVault
+AI Document Vault & Intelligent Form Autofill Engine
+NeoVault lets users upload identity/financial documents (Aadhaar, PAN, etc.), automatically extracts structured data using OCR + Google Gemini AI, and securely stores selected fields in an encrypted vault.
+Tech Stack
+Backend: Flask, SQLAlchemy, Flask-Migrate, Flask-JWT-Extended, Flask-Bcrypt, Flask-Mail, Flask-CORS, Fernet (cryptography), PyTesseract, pdf2image, Google Gemini API
+Frontend: React, Vite, React Router, Axios
+Database: SQLite (dev)
+External dependencies: Tesseract OCR, Poppler, Gmail SMTP (App Password), Google Gemini API key
+Features (Completed)
 
-AI Document Vault & Intelligent Form Autofill Engine — React frontend.
+Full authentication: Register → Email OTP verification (real SMTP) → Login → JWT-protected routes
+Document upload: PDF/JPG/PNG (max 10MB), validated and stored
+OCR text extraction (PyTesseract + Poppler for PDFs)
+AI-powered parsing via Gemini: detects document type, extracts structured fields (name, DOB, ID number, address, etc.)
+Document management: list, view parsed details, soft-delete
+Encrypted Vault: save extracted fields (Fernet encryption), categorized (Identity/Financial/Medical/Other), view/delete
+13 fully designed React screens, dark glassmorphism theme, all wired to real backend endpoints (no mock data)
 
-## Getting Started
+Roadmap (Not Yet Implemented)
 
-1. Install dependencies:
-   ```
-   npm install
-   ```
+URL security scanner (HTTPS/SSL/phishing/blacklist checks)
+Real-time Dashboard stats (currently placeholder counts)
+Form autofill agent (external site field detection/filling)
+Admin panel backend (user management, logs)
+Rate limiting, CSRF protection, broader input validation
+Background job queue (Celery/Redis) for document processing
+Production deployment config (currently SQLite + Flask dev server + local storage)
 
-2. Run the development server:
-   ```
-   npm run dev
-   ```
-   Then open http://localhost:5173
+Setup
+Backend
+cd neovault-backend
+python -m venv venv
+venv\Scripts\activate      # Windows
+pip install -r requirements.txt
+Copy .env.example to .env and fill in:
+SECRET_KEY=
+JWT_SECRET_KEY=
+DATABASE_URL=sqlite:///neovault.db
+GMAIL_USER=
+GMAIL_APP_PASSWORD=
+GEMINI_API_KEY=
+FERNET_KEY=
+Generate FERNET_KEY:
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+System dependencies (must be installed separately, not via pip):
 
-3. Build for production:
-   ```
-   npm run build
-   ```
+Tesseract OCR — add install path to system PATH
+Poppler for Windows — add Library/bin folder to system PATH
 
-## What's included
-
-- All 13 screens converted from the Stitch design export into React components (`src/pages/`)
-- React Router wiring so screens navigate as a real app (`src/App.jsx`)
-- A simple auth context (`src/context/AuthContext.jsx`) using localStorage — currently a demo/mock login that accepts any email+password and issues a fake token. (The Flask backend is now available and should be integrated to replace this mock).
-- Protected routes: all screens except Login/Register/OTP/Reset Password require being "logged in" (demo auth) to view, and redirect to /login otherwise.
-- Sidebar navigation links are wired to real routes (Dashboard, Vault, Document Upload, URL Scanner, Profile, Settings, Admin Portal).
-
-## Current Status & Next Steps
-
-- **Frontend-Backend Integration**: A Flask backend (with JWT auth, database models, and OTP generation endpoints) has been created. The next step is to wire the frontend to use these real API endpoints instead of the mock authentication.
-- **OTP Verification Endpoint**: The backend currently has a `/request-otp` endpoint, but an endpoint to actually *verify* the OTP and reset the password remains to be implemented.
-- **AI Document Parsing (OCR + Gemini)**: The "AI Parsing Results" screen currently shows static placeholder data. The backend logic for this needs to be built and integrated.
-- **URL Security Scanning**: The scanner screen is UI-only right now. Backend logic needs to be developed.
-- **UI Enhancements**: Some interactive JavaScript from the original design (like OTP auto-advance between digit boxes, and password show/hide toggles) should be re-implemented using React state/hooks.
-
-## Design System
-
-Colors, typography, spacing, and component styles are defined via a Tailwind CDN config in `index.html`, matching the DESIGN.md exported from Google Stitch (dark cybersecurity theme, glassmorphism, blue/purple neon glow).
+Run migrations and start the server:
+flask db upgrade
+python run.py
+API runs at http://localhost:5000
+Frontend
+cd neovault-frontend
+npm install
+npm run dev
+App runs at http://localhost:5173
