@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from email_validator import validate_email, EmailNotValidError
-from app.extensions import db, bcrypt, mail
+from app.extensions import db, bcrypt, mail, limiter
 from flask_mail import Message
 from app.models import User, OTP, ActivityLog
 import random
@@ -15,6 +15,7 @@ auth_bp = Blueprint('auth', __name__)
 otp_rate_limits = {}
 
 @auth_bp.route('/register', methods=['POST'])
+@limiter.limit("3 per hour")
 def register():
     data = request.get_json()
     if not data:
@@ -73,6 +74,7 @@ def register():
     }), 201
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json()
     if not data:
@@ -168,6 +170,7 @@ def request_otp():
     return jsonify({"message": "OTP generated and sent successfully"}), 200
 
 @auth_bp.route('/verify-otp', methods=['POST'])
+@limiter.limit("5 per minute")
 def verify_otp():
     data = request.get_json()
     if not data:

@@ -1,7 +1,7 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from app.config import config_by_name
-from app.extensions import db, migrate, jwt, bcrypt, cors, mail
+from app.extensions import db, migrate, jwt, bcrypt, cors, mail, limiter
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -20,8 +20,17 @@ def create_app(config_name=None):
     jwt.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
+    limiter.init_app(app)
     # Enable CORS for the React frontend (usually localhost:3000 or 5173 for Vite)
     cors.init_app(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://localhost:5173"]}})
+    
+    # Custom 429 Rate Limit Error Handler
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        return jsonify({
+            "error": "Rate limit exceeded. Please try again later.",
+            "retry_after": "60 seconds"
+        }), 429
     
     # Register blueprints (routes)
     from app.routes.auth import auth_bp

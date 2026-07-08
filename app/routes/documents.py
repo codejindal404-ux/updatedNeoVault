@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 import os
 import uuid
 from werkzeug.utils import secure_filename
-from app.extensions import db
+from app.extensions import db, limiter
 from app.models import Document
 from datetime import datetime, timezone
 import json
@@ -19,6 +19,7 @@ def allowed_file(filename):
 
 @documents_bp.route('/upload', methods=['POST'])
 @jwt_required()
+@limiter.limit("10 per hour")
 def upload_document():
     current_user_id = get_jwt_identity()
     
