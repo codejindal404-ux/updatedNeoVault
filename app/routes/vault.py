@@ -33,13 +33,44 @@ def save_vault_entries():
     if not fields or not isinstance(fields, list):
         return jsonify({"error": "No valid fields provided"}), 400
 
+    import json
+    
     saved_count = 0
+    flat_fields = []
+
+    def extract_nested(name, value):
+        if not name or value is None:
+            return
+            
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+                if isinstance(parsed, dict):
+                    for k, v in parsed.items():
+                        extract_nested(k, v)
+                    return
+            except json.JSONDecodeError:
+                pass
+                
+        if isinstance(value, dict):
+            for k, v in value.items():
+                extract_nested(k, v)
+            return
+            
+        flat_fields.append({'field_name': name, 'field_value': value})
+
     for field in fields:
+        extract_nested(field.get('field_name'), field.get('field_value'))
+
+    for field in flat_fields:
         field_name = field.get('field_name')
         field_value = field.get('field_value')
 
         if not field_name or field_value is None:
             continue
+
+        # Format field name nicely (e.g. "date_of_birth" -> "Date Of Birth")
+        formatted_name = str(field_name).replace('_', ' ').title()
 
         try:
             encrypted_value = encrypt_value(str(field_value))
@@ -47,14 +78,14 @@ def save_vault_entries():
             entry = VaultEntry(
                 user_id=user.id,
                 document_id=document_id,
-                field_name=field_name,
+                field_name=formatted_name,
                 field_value_encrypted=encrypted_value,
                 category=category
             )
             db.session.add(entry)
             saved_count += 1
         except Exception as e:
-            logger.error(f"Failed to encrypt/save field {field_name}: {str(e)}")
+            logger.error(f"Failed to encrypt/save field {formatted_name}: {str(e)}")
             continue
 
     try:

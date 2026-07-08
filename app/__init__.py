@@ -29,11 +29,13 @@ def create_app(config_name=None):
     from app.routes.vault import vault_bp
     from app.routes.admin import admin_bp
     from app.routes.scanner import scanner_bp
+    from app.routes.autofill import autofill_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(documents_bp, url_prefix='/api/documents')
     app.register_blueprint(vault_bp, url_prefix='/api/vault')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(scanner_bp, url_prefix='/api/scanner')
+    app.register_blueprint(autofill_bp, url_prefix='/api/autofill')
     
     # Debug print for all routes
     print("Registered routes:")
