@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from email_validator import validate_email, EmailNotValidError
 from app.extensions import db, bcrypt, mail
 from flask_mail import Message
-from app.models import User, OTP
+from app.models import User, OTP, ActivityLog
 import random
 import string
 import time
@@ -89,6 +89,9 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password_hash, password):
         return jsonify({"error": "Invalid email or password"}), 401
         
+    if not user.is_active:
+        return jsonify({"error": "Your account has been blocked by an administrator"}), 403
+        
     if not user.is_verified:
         return jsonify({
             "error": "Please verify your email first",
@@ -97,6 +100,16 @@ def login():
         
     access_token = create_access_token(identity=str(user.id))
     refresh_token = create_refresh_token(identity=str(user.id))
+    
+    # Update last_login and log activity
+    user.last_login = datetime.now(timezone.utc)
+    log = ActivityLog(
+        user_id=user.id,
+        action="login",
+        ip_address=request.remote_addr
+    )
+    db.session.add(log)
+    db.session.commit()
     
     return jsonify({
         "access_token": access_token,

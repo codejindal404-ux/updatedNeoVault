@@ -12,3 +12,4 @@ pytesseract
 pdf2image
 google-genai
 Pillow
+requests==2.31.0

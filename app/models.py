@@ -8,6 +8,9 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class OTP(db.Model):
@@ -48,3 +51,23 @@ class VaultEntry(db.Model):
     category = db.Column(db.String(100), nullable=True) # identity, financial, medical
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class ActivityLog(db.Model):
+    __tablename__ = 'activity_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    action = db.Column(db.String(100), nullable=False)
+    ip_address = db.Column(db.String(45), nullable=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+class ScanHistory(db.Model):
+    __tablename__ = 'scan_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    url = db.Column(db.String(2048), nullable=False)
+    verdict = db.Column(db.String(50), nullable=False) # Safe, Suspicious, Dangerous
+    safety_score = db.Column(db.Integer, nullable=False)
+    scanned_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
