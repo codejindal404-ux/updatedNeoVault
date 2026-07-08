@@ -14,3 +14,4 @@ google-genai
 Pillow
 requests==2.31.0
 Flask-Limiter==3.8.0
+psycopg2-binary==2.9.12
