@@ -8,3 +8,5 @@ __pycache__/
 instance/
 uploads/
 migrations/versions/__pycache__/
+*.db
+instance/
