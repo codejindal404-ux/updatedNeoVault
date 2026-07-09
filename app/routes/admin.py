@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity
 from app.extensions import db
-from app.models import User, Document, VaultEntry, ActivityLog
+from app.models import User, Document, VaultEntry, ActivityLog, ScanHistory
 from app.utils.auth_decorators import admin_required
 from sqlalchemy import func
+import math
 
 # IMPORTANT SECURITY NOTE:
 # In a production environment, the first administrative user MUST be manually 
@@ -16,7 +17,37 @@ admin_bp = Blueprint('admin', __name__)
 @admin_bp.route('/users', methods=['GET'])
 @admin_required()
 def get_users():
-    users = User.query.all()
+    search = request.args.get('search', '', type=str)
+    status = request.args.get('status', 'all', type=str)
+    verified = request.args.get('verified', 'all', type=str)
+    role = request.args.get('role', 'all', type=str)
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    query = User.query
+    
+    if search:
+        query = query.filter(User.email.ilike(f'%{search}%'))
+        
+    if status == 'active':
+        query = query.filter(User.is_active == True)
+    elif status == 'inactive':
+        query = query.filter(User.is_active == False)
+        
+    if verified == 'verified':
+        query = query.filter(User.is_verified == True)
+    elif verified == 'unverified':
+        query = query.filter(User.is_verified == False)
+        
+    if role == 'admin':
+        query = query.filter(User.is_admin == True)
+    elif role == 'user':
+        query = query.filter(User.is_admin == False)
+        
+    pagination = query.order_by(User.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    
     result = []
     for user in users:
         result.append({
@@ -28,27 +59,55 @@ def get_users():
             "last_login": user.last_login.isoformat() if user.last_login else None,
             "created_at": user.created_at.isoformat() if user.created_at else None
         })
-    return jsonify({"users": result}), 200
+        
+    return jsonify({
+        "users": result,
+        "total_count": pagination.total,
+        "total_pages": pagination.pages,
+        "current_page": page
+    }), 200
 
-@admin_bp.route('/users/<int:user_id>', methods=['GET'])
+@admin_bp.route('/users/<int:user_id>/details', methods=['GET'])
 @admin_required()
 def get_user_details(user_id):
     user = User.query.get_or_404(user_id)
-    doc_count = Document.query.filter_by(user_id=user.id).count()
-    vault_count = VaultEntry.query.filter_by(user_id=user.id).count()
+    
+    document_count = Document.query.filter_by(user_id=user.id).count()
+    vault_entry_count = VaultEntry.query.filter_by(user_id=user.id).count()
+    
+    # Recent activity
+    recent_activity_logs = ActivityLog.query.filter_by(user_id=user.id).order_by(ActivityLog.timestamp.desc()).limit(10).all()
+    recent_activity = [{
+        "id": log.id,
+        "action": log.action,
+        "ip_address": log.ip_address,
+        "timestamp": log.timestamp.isoformat() if log.timestamp else None
+    } for log in recent_activity_logs]
+    
+    # Recent scans
+    recent_scans_history = ScanHistory.query.filter_by(user_id=user.id).order_by(ScanHistory.scanned_at.desc()).limit(5).all()
+    recent_scans = [{
+        "id": scan.id,
+        "url": scan.url,
+        "verdict": scan.verdict,
+        "safety_score": scan.safety_score,
+        "scanned_at": scan.scanned_at.isoformat() if scan.scanned_at else None
+    } for scan in recent_scans_history]
     
     return jsonify({
         "id": user.id,
         "email": user.email,
+        "full_name": user.full_name,
+        "phone": user.phone,
         "is_verified": user.is_verified,
         "is_active": user.is_active,
         "is_admin": user.is_admin,
-        "last_login": user.last_login.isoformat() if user.last_login else None,
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "stats": {
-            "documents_count": doc_count,
-            "vault_entries_count": vault_count
-        }
+        "last_login": user.last_login.isoformat() if user.last_login else None,
+        "document_count": document_count,
+        "vault_entry_count": vault_entry_count,
+        "recent_activity": recent_activity,
+        "recent_scans": recent_scans
     }), 200
 
 @admin_bp.route('/users/<int:user_id>/toggle-status', methods=['PATCH'])
