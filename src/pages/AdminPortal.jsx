@@ -104,6 +104,10 @@ export default function AdminPortal() {
 <span className="material-symbols-outlined">travel_explore</span>
                 URL Scanner
             </Link>
+<Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 active:scale-[0.98]" to="/form-autofill">
+<span className="material-symbols-outlined">bolt</span>
+                Form Autofill
+            </Link>
 <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 active:scale-[0.98]" to="/profile">
 <span className="material-symbols-outlined">person</span>
                 Profile

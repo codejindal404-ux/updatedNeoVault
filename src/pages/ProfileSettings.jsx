@@ -39,6 +39,10 @@ export default function ProfileSettings() {
 <span className="material-symbols-outlined">travel_explore</span>
 <span className="font-body-md text-body-md">URL Scanner</span>
 </Link>
+<Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 active:scale-[0.98]" to="/form-autofill">
+<span className="material-symbols-outlined">bolt</span>
+<span className="font-body-md text-body-md">Form Autofill</span>
+</Link>
 <Link className="flex items-center gap-3 px-4 py-3 text-primary border-l-2 border-primary shadow-[inset_4px_0_10px_-4px_rgba(76,214,255,0.4)] bg-primary/5 transition-colors duration-200 active:scale-[0.98]" to="/profile">
 <span className="material-symbols-outlined" style={{fontVariationSettings: '\'FILL\' 1'}}>person</span>
 <span className="font-body-md text-body-md font-medium">Profile</span>

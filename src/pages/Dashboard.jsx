@@ -45,6 +45,10 @@ export default function Dashboard() {
 <span className="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">travel_explore</span>
 <span className="font-body-md text-body-md">URL Scanner</span>
 </Link>
+<Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all duration-200 rounded-lg group" to="/form-autofill">
+<span className="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">bolt</span>
+<span className="font-body-md text-body-md">Form Autofill</span>
+</Link>
 <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all duration-200 rounded-lg group" to="/profile">
 <span className="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">person</span>
 <span className="font-body-md text-body-md">Profile</span>
@@ -187,30 +191,30 @@ export default function Dashboard() {
 <div className="glass-panel rounded-xl p-6">
 <h3 className="font-label-caps text-label-caps text-outline mb-4">Quick Operations</h3>
 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-<button className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-primary/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32">
+<Link to="/upload" className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-primary/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32 text-center">
 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:scale-110 transition-all">
 <span className="material-symbols-outlined text-[24px] text-primary">cloud_upload</span>
 </div>
 <span className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors text-center">Upload Document</span>
-</button>
-<button className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-secondary/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32">
+</Link>
+<Link to="/vault" className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-secondary/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32 text-center">
 <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 group-hover:scale-110 transition-all">
 <span className="material-symbols-outlined text-[24px] text-secondary">folder_open</span>
 </div>
 <span className="font-label-md text-label-md text-on-surface group-hover:text-secondary transition-colors text-center">Open Vault</span>
-</button>
-<button className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-tertiary/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32">
+</Link>
+<Link to="/url-scanner" className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-tertiary/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32 text-center">
 <div className="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center group-hover:bg-tertiary/20 group-hover:scale-110 transition-all">
 <span className="material-symbols-outlined text-[24px] text-tertiary">radar</span>
 </div>
 <span className="font-label-md text-label-md text-on-surface group-hover:text-tertiary transition-colors text-center">Scan URL</span>
-</button>
-<button className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-primary-fixed-dim/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32">
+</Link>
+<Link to="/form-autofill" className="bg-surface-container/40 hover:bg-surface-container border border-white/5 hover:border-primary-fixed-dim/30 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-200 group h-32 text-center">
 <div className="w-12 h-12 rounded-full bg-primary-fixed-dim/10 flex items-center justify-center group-hover:bg-primary-fixed-dim/20 group-hover:scale-110 transition-all">
 <span className="material-symbols-outlined text-[24px] text-primary-fixed-dim">auto_awesome</span>
 </div>
 <span className="font-label-md text-label-md text-on-surface group-hover:text-primary-fixed-dim transition-colors text-center">Autofill Forms</span>
-</button>
+</Link>
 </div>
 </div>
 </div>

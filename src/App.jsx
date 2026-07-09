@@ -62,7 +62,7 @@ export default function App() {
             }
           />
           <Route
-            path="/autofill"
+            path="/form-autofill"
             element={
               <ProtectedRoute>
                 <FormAutofill />

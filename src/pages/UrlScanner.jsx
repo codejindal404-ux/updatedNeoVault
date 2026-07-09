@@ -90,6 +90,10 @@ export default function UrlScanner() {
             <span className="material-symbols-outlined" data-icon="travel_explore">travel_explore</span>
             <span className="font-body-md text-body-md">URL Scanner</span>
           </Link>
+          <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all rounded-lg mx-2" to="/form-autofill">
+            <span className="material-symbols-outlined" data-icon="bolt">bolt</span>
+            <span className="font-body-md text-body-md">Form Autofill</span>
+          </Link>
           <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all rounded-lg mx-2" to="/profile">
             <span className="material-symbols-outlined" data-icon="person">person</span>
             <span className="font-body-md text-body-md">Profile</span>

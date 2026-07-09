@@ -30,6 +30,10 @@ export default function AiParsingResults() {
 <span className="material-symbols-outlined">travel_explore</span>
 <span>URL Scanner</span>
 </Link>
+<Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all rounded-lg" to="/form-autofill">
+<span className="material-symbols-outlined">bolt</span>
+<span>Form Autofill</span>
+</Link>
 <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all rounded-lg mt-auto" to="/profile">
 <span className="material-symbols-outlined">person</span>
 <span>Profile</span>
