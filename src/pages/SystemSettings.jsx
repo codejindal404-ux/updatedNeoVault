@@ -51,6 +51,12 @@ export default function SystemSettings() {
 </Link>
 </li>
 <li>
+<Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 cursor-pointer active:scale-[0.98] transition-transform" to="/form-autofill">
+<span className="material-symbols-outlined">bolt</span>
+<span className="font-body-md text-body-md">Form Autofill</span>
+</Link>
+</li>
+<li>
 <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 cursor-pointer active:scale-[0.98] transition-transform" to="/profile">
 <span className="material-symbols-outlined">person</span>
 <span className="font-body-md text-body-md">Profile</span>

@@ -218,6 +218,10 @@ export default function DocumentUpload() {
 <span className="material-symbols-outlined" data-icon="travel_explore">travel_explore</span>
 <span className="font-label-md text-label-md">URL Scanner</span>
 </Link>
+<Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 rounded-md" to="/form-autofill">
+<span className="material-symbols-outlined" data-icon="bolt">bolt</span>
+<span className="font-label-md text-label-md">Form Autofill</span>
+</Link>
 <Link className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors duration-200 rounded-md" to="/profile">
 <span className="material-symbols-outlined" data-icon="person">person</span>
 <span className="font-label-md text-label-md">Profile</span>
