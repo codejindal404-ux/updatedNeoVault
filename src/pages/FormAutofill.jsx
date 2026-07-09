@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function FormAutofill() {
   const [fieldsData, setFieldsData] = useState(null);
@@ -79,7 +80,7 @@ export default function FormAutofill() {
         </div>
       </nav>
 
-      <div className="flex-1 flex flex-col min-h-screen md:ml-[280px] w-full">
+      <div className="flex flex-col md:ml-[280px] h-screen overflow-hidden">
         <header className="hidden md:flex fixed top-0 right-0 w-[calc(100%-280px)] h-16 bg-surface/60 backdrop-blur-lg border-b border-white/5 justify-between items-center px-margin-desktop z-40">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 text-tertiary font-label-md text-label-md bg-tertiary/10 px-3 py-1.5 rounded-full border border-tertiary/20">
@@ -92,9 +93,7 @@ export default function FormAutofill() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
+            <NotificationDropdown />
             <button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
               <span className="material-symbols-outlined">verified_user</span>
             </button>
@@ -104,7 +103,7 @@ export default function FormAutofill() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pt-24 pb-md px-margin-mobile md:px-margin-desktop flex flex-col items-center">
+        <main className="flex-1 overflow-y-auto pt-24 pb-md px-margin-mobile md:px-margin-desktop">
           <div className="w-full max-w-3xl space-y-md">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-lg">
               <div>

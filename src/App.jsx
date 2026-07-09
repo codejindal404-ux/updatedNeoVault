@@ -9,7 +9,7 @@ import OtpVerification from './pages/OtpVerification.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import DocumentUpload from './pages/DocumentUpload.jsx';
-import AiParsingResults from './pages/AiParsingResults.jsx';
+
 import IdentityVault from './pages/IdentityVault.jsx';
 import FormAutofill from './pages/FormAutofill.jsx';
 import UrlScanner from './pages/UrlScanner.jsx';
@@ -45,14 +45,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/ai-parsing-results"
-            element={
-              <ProtectedRoute>
-                <AiParsingResults />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/vault"
             element={

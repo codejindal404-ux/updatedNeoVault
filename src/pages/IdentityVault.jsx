@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api.js';
+import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function IdentityVault() {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newField, setNewField] = useState({ field_name: '', field_value: '', category: 'other' });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchVaultEntries();
@@ -31,6 +36,42 @@ export default function IdentityVault() {
     } catch (err) {
       console.error('Failed to delete vault entry:', err);
       alert('Failed to delete vault entry. Please try again.');
+    }
+  };
+
+  const handleSaveField = async (e) => {
+    e.preventDefault();
+    if (!newField.field_name || !newField.field_value) return;
+    setIsSaving(true);
+    try {
+      await api.post('/vault/save', {
+        category: newField.category,
+        fields: [{ field_name: newField.field_name, field_value: newField.field_value }]
+      });
+      setIsModalOpen(false);
+      setNewField({ field_name: '', field_value: '', category: 'other' });
+      fetchVaultEntries();
+    } catch (err) {
+      console.error('Failed to save field:', err);
+      alert('Failed to save custom field.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await api.get('/vault/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `neovault_export.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export vault:', err);
+      alert('Failed to export vault data.');
     }
   };
 
@@ -64,10 +105,7 @@ export default function IdentityVault() {
 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
 <input className="w-full bg-surface-container-high border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-on-surface-variant/50" placeholder="Search Vault..." type="text" />
 </div>
-<button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80 relative">
-<span className="material-symbols-outlined">notifications</span>
-<span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full shadow-[0_0_6px_#a4e6ff]"></span>
-</button>
+<NotificationDropdown />
 <button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
 <span className="material-symbols-outlined text-tertiary">verified_user</span>
 </button>
@@ -130,7 +168,8 @@ export default function IdentityVault() {
 </div>
 </aside>
 
-<main className="md:ml-[280px] pt-16 min-h-screen bg-grid relative flex flex-col">
+<div className="flex flex-col md:ml-[280px] h-screen overflow-hidden">
+<main className="flex-1 overflow-y-auto pt-16 bg-grid relative flex flex-col">
 
 <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
 <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
@@ -144,22 +183,14 @@ export default function IdentityVault() {
 <p className="font-body-lg text-body-lg text-on-surface-variant">Manage and secure your verified identity fields.</p>
 </div>
 <div className="flex items-center gap-4">
-<button className="btn-ghost flex items-center gap-2 px-4 py-2 rounded-lg font-label-md text-label-md">
+<button onClick={() => setIsModalOpen(true)} className="btn-ghost flex items-center gap-2 px-4 py-2 rounded-lg font-label-md text-label-md">
 <span className="material-symbols-outlined text-[18px]">add_circle</span>
                         Add Custom Field
                     </button>
-<div className="relative group">
-<button className="glass-card flex items-center gap-2 px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface hover:text-primary transition-colors">
+<button onClick={handleExport} className="glass-card flex items-center gap-2 px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface hover:text-primary transition-colors">
 <span className="material-symbols-outlined text-[18px]">download</span>
-                            Export
-                            <span className="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+                            Export CSV
 </button>
-
-<div className="absolute right-0 top-full mt-2 w-32 glass-card rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-<button className="w-full text-left px-4 py-2 font-label-md text-label-md text-on-surface hover:bg-white/5 hover:text-primary transition-colors">Export JSON</button>
-<button className="w-full text-left px-4 py-2 font-label-md text-label-md text-on-surface hover:bg-white/5 hover:text-primary transition-colors">Export PDF</button>
-</div>
-</div>
 </div>
 </header>
 
@@ -286,6 +317,69 @@ export default function IdentityVault() {
 </div>
 </div>
 </main>
+</div>
+
+{/* Add Custom Field Modal */}
+{isModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+      <div className="p-6 border-b border-white/5">
+        <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary">add_circle</span>
+          Add Custom Field
+        </h3>
+        <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-on-surface-variant hover:text-on-surface">
+          <span className="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form onSubmit={handleSaveField} className="p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-on-surface-variant mb-1">Field Name</label>
+          <input
+            type="text"
+            required
+            value={newField.field_name}
+            onChange={(e) => setNewField({...newField, field_name: e.target.value})}
+            className="w-full bg-surface-container-high border border-white/10 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary transition-colors"
+            placeholder="e.g. Passport Number"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-on-surface-variant mb-1">Field Value</label>
+          <input
+            type="text"
+            required
+            value={newField.field_value}
+            onChange={(e) => setNewField({...newField, field_value: e.target.value})}
+            className="w-full bg-surface-container-high border border-white/10 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary transition-colors"
+            placeholder="e.g. A1234567"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-on-surface-variant mb-1">Category</label>
+          <select
+            value={newField.category}
+            onChange={(e) => setNewField({...newField, category: e.target.value})}
+            className="w-full bg-surface-container-high border border-white/10 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary transition-colors appearance-none"
+          >
+            <option value="identity">Identity</option>
+            <option value="financial">Financial</option>
+            <option value="medical">Medical</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div className="pt-4 flex justify-end gap-3">
+          <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            Cancel
+          </button>
+          <button type="submit" disabled={isSaving} className="px-6 py-2 bg-primary text-on-primary rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
+            {isSaving ? 'Saving...' : 'Save Field'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
     </>
   );

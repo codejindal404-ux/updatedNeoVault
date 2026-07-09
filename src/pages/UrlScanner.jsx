@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function UrlScanner() {
   const [url, setUrl] = useState('');
@@ -115,7 +116,7 @@ export default function UrlScanner() {
         </div>
       </nav>
 
-      <div className="flex-1 flex flex-col md:ml-[280px] w-full min-h-screen relative">
+      <div className="flex flex-col md:ml-[280px] h-screen overflow-hidden relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]"></div>
           <div className="absolute bottom-[-10%] left-[10%] w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px]"></div>
@@ -129,9 +130,7 @@ export default function UrlScanner() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
-              <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-            </button>
+            <NotificationDropdown />
             <button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
               <span className="material-symbols-outlined" data-icon="verified_user">verified_user</span>
             </button>
@@ -141,7 +140,7 @@ export default function UrlScanner() {
           </div>
         </header>
 
-        <main className="flex-1 px-margin-mobile md:px-margin-desktop pt-24 pb-12 z-10 w-full max-w-container-max mx-auto">
+        <main className="flex-1 overflow-y-auto px-margin-mobile md:px-margin-desktop pt-24 pb-12 z-10">
           <div className="mb-12 text-center max-w-3xl mx-auto">
             <h2 className="font-headline-xl text-headline-xl text-on-surface mb-4">Deep Threat <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">URL Scanner</span></h2>
             <p className="font-body-lg text-body-lg text-on-surface-variant">Analyze any web address for phishing attempts, malware signatures, and SSL vulnerabilities using our proprietary AI threat engine.</p>
