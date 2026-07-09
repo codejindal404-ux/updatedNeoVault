@@ -89,6 +89,15 @@ def save_vault_entries():
             continue
 
     try:
+        # Log activity
+        from app.models import ActivityLog
+        log = ActivityLog(
+            user_id=user.id,
+            action="vault_save",
+            ip_address=request.remote_addr
+        )
+        db.session.add(log)
+        
         db.session.commit()
         return jsonify({"message": f"Successfully saved {saved_count} entries to vault", "count": saved_count}), 201
     except Exception as e:
@@ -157,3 +166,47 @@ def delete_vault_entry(entry_id):
         db.session.rollback()
         logger.error(f"Database error deleting vault entry {entry_id}: {str(e)}")
         return jsonify({"error": "Database error while deleting entry"}), 500
+
+
+@vault_bp.route('/export', methods=['GET'], strict_slashes=False)
+@jwt_required()
+def export_vault():
+    import csv
+    import io
+    from flask import Response
+    
+    current_user_id = int(get_jwt_identity())
+    user = User.query.get(current_user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    entries = VaultEntry.query.filter_by(user_id=user.id).order_by(VaultEntry.category, VaultEntry.field_name).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Category', 'Field Name', 'Field Value', 'Created At'])
+
+    for entry in entries:
+        try:
+            decrypted_value = decrypt_value(entry.field_value_encrypted)
+        except Exception:
+            decrypted_value = '[decryption error]'
+
+        writer.writerow([
+            entry.id,
+            entry.category or 'other',
+            entry.field_name,
+            decrypted_value,
+            entry.created_at.isoformat() if entry.created_at else ''
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={
+            'Content-Disposition': f'attachment; filename=neovault_export_{user.id}.csv'
+        }
+    )
+

@@ -81,6 +81,16 @@ def upload_document():
         
     db.session.commit()
     
+    # Log activity
+    from app.models import ActivityLog
+    log = ActivityLog(
+        user_id=current_user_id,
+        action="upload",
+        ip_address=request.remote_addr
+    )
+    db.session.add(log)
+    db.session.commit()
+    
     return jsonify({
         "id": new_doc.id,
         "filename": new_doc.original_filename,

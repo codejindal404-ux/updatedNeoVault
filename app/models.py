@@ -12,6 +12,10 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     last_login = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    full_name = db.Column(db.String(150), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    email_notifications_enabled = db.Column(db.Boolean, default=True)
 
 class OTP(db.Model):
     __tablename__ = 'otps'

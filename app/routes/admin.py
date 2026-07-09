@@ -1,8 +1,15 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import get_jwt_identity
 from app.extensions import db
 from app.models import User, Document, VaultEntry, ActivityLog
 from app.utils.auth_decorators import admin_required
 from sqlalchemy import func
+
+# IMPORTANT SECURITY NOTE:
+# In a production environment, the first administrative user MUST be manually 
+# configured directly in the database (e.g., `UPDATE users SET is_admin=1 WHERE email='...';`).
+# There is NO self-service endpoint to grant admin rights to ensure security. 
+# Once the first admin is set, they can promote other users via the Admin Portal UI.
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -54,11 +61,66 @@ def toggle_user_status(user_id):
     user.is_active = not user.is_active
     db.session.commit()
     
+    current_admin_id = get_jwt_identity()
     action = "unblocked" if user.is_active else "blocked"
+    
+    log = ActivityLog(
+        user_id=current_admin_id,
+        action=f"admin_action: {action} user {user.id}",
+        ip_address=request.remote_addr
+    )
+    db.session.add(log)
+    db.session.commit()
+    
     return jsonify({
         "message": f"User successfully {action}",
         "is_active": user.is_active
     }), 200
+
+@admin_bp.route('/users/<int:user_id>/toggle-admin', methods=['PUT'])
+@admin_required()
+def toggle_admin_status(user_id):
+    current_admin_id = int(get_jwt_identity())
+    
+    if current_admin_id == user_id:
+        return jsonify({"error": "Cannot remove your own admin access"}), 400
+        
+    user = User.query.get_or_404(user_id)
+    user.is_admin = not user.is_admin
+    db.session.commit()
+    
+    action = "granted admin to" if user.is_admin else "revoked admin from"
+    
+    log = ActivityLog(
+        user_id=current_admin_id,
+        action=f"admin_action: {action} user {user.id}",
+        ip_address=request.remote_addr
+    )
+    db.session.add(log)
+    db.session.commit()
+    
+    return jsonify({
+        "message": f"Successfully {action} user {user.id}",
+        "is_admin": user.is_admin
+    }), 200
+
+@admin_bp.route('/security-alerts', methods=['GET'])
+@admin_required()
+def get_security_alerts():
+    # Fetch unauthorized admin access attempts
+    logs = ActivityLog.query.filter_by(action="unauthorized_admin_access_attempt").order_by(ActivityLog.timestamp.desc()).all()
+    
+    results = []
+    for log in logs:
+        results.append({
+            "id": log.id,
+            "user_id": log.user_id,
+            "action": log.action,
+            "ip_address": log.ip_address,
+            "timestamp": log.timestamp.isoformat() if log.timestamp else None
+        })
+        
+    return jsonify({"alerts": results}), 200
 
 @admin_bp.route('/stats', methods=['GET'])
 @admin_required()

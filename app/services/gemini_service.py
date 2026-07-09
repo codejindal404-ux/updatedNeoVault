@@ -47,7 +47,7 @@ def parse_document_text(raw_text: str) -> dict:
             
         return json.loads(response_text.strip())
     except json.JSONDecodeError as e:
-        print(f"Gemini JSON Decode Error: {e}. Raw response: {response_text}")
+        print(f"Gemini JSON Decode Error: {e}")
         return {}
     except Exception as e:
         print(f"Gemini API Error: {e}")

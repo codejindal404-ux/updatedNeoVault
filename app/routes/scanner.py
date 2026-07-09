@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.extensions import db
+from app.extensions import db, limiter
 from app.models import ScanHistory
 from app.services.url_scanner_service import scan_url
 
@@ -8,6 +8,7 @@ scanner_bp = Blueprint('scanner', __name__)
 
 @scanner_bp.route('/check-url', methods=['POST'])
 @jwt_required()
+@limiter.limit("60 per hour")
 def check_url():
     data = request.get_json()
     if not data or 'url' not in data:

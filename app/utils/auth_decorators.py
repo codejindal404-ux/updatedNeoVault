@@ -12,6 +12,22 @@ def admin_required():
             user = User.query.get(current_user_id)
             
             if not user or not user.is_admin:
+                # Log the suspicious attempt
+                from app.models import ActivityLog
+                from app.extensions import db
+                from flask import request
+                
+                log = ActivityLog(
+                    user_id=current_user_id,
+                    action="unauthorized_admin_access_attempt",
+                    ip_address=request.remote_addr
+                )
+                db.session.add(log)
+                try:
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+                    
                 return jsonify({"error": "Admin access required"}), 403
                 
             return fn(*args, **kwargs)
