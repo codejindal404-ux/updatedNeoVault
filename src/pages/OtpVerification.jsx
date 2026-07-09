@@ -108,11 +108,10 @@ export default function OtpVerification() {
     <>
 
 
-<div className="absolute inset-0 pointer-events-none z-0">
-<div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] bg-element"></div>
-<div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-secondary-container/10 blur-[150px] bg-element" style={{animationDelay: '-15s'}}></div>
-
-<div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDUpIiBmaWxsPSJub25lIj48cGF0aCBkPSJNMCA0MGw0MC00TTAgMGw0MCA0MCIvPjwvZz48L3N2Zz4=')] opacity-20"></div>
+<div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+<div className="absolute inset-0 bg-glow-1 pointer-events-none"></div>
+<div className="absolute inset-0 bg-glow-2 pointer-events-none"></div>
+<div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDUpIiBmaWxsPSJub25lIj48cGF0aCBkPSJNMCA0MGw0MC00TTAgMGw0MCA0MCIvPjwvZz48L3N2Zz4=')] opacity-10"></div>
 </div>
 
 <main className="relative z-10 w-full max-w-md px-margin-mobile md:px-0">
@@ -167,7 +166,11 @@ export default function OtpVerification() {
 <div className="space-y-md">
 <button disabled={isSubmitting} className="w-full btn-glow bg-gradient-to-r from-primary to-primary-fixed-dim text-on-primary font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
 <span>{isSubmitting ? 'Verifying...' : 'Authenticate Session'}</span>
-<span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+{isSubmitting ? (
+  <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+) : (
+  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+)}
 </button>
 <div className="flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant px-1">
 <span>Did not receive transmission?</span>

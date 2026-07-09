@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api.js';
+import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function DocumentUpload() {
   const [documents, setDocuments] = useState([]);
@@ -254,10 +255,8 @@ export default function DocumentUpload() {
 <span>AI credits: 84%</span>
 </div>
 </div>
-<div className="flex items-center gap-6">
-<button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
-<span className="material-symbols-outlined">notifications</span>
-</button>
+<div className="flex items-center gap-4">
+<NotificationDropdown />
 <button className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80">
 <span className="material-symbols-outlined">verified_user</span>
 </button>
@@ -267,7 +266,8 @@ export default function DocumentUpload() {
 </div>
 </header>
 
-<main className="w-full md:ml-[280px] pt-16 md:pt-[88px] p-margin-mobile md:p-margin-desktop min-h-screen">
+<div className="flex flex-col md:ml-[280px] h-screen overflow-hidden relative">
+<main className="flex-1 overflow-y-auto pt-16 md:pt-[88px] p-margin-mobile md:p-margin-desktop">
 <div className="max-w-container-max mx-auto space-y-8">
 
 <div className="flex flex-col gap-2">
@@ -522,6 +522,8 @@ export default function DocumentUpload() {
     </div>
   </div>
 )}
+
+</div>
 
     </>
   );

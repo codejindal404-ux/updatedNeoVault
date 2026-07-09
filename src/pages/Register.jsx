@@ -39,23 +39,24 @@ export default function Register() {
 
 
 <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-<div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary rounded-full mix-blend-screen filter blur-[150px] opacity-10"></div>
-<div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary rounded-full mix-blend-screen filter blur-[150px] opacity-10"></div>
-<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1440px] h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMzAgMEw2MCAzMEwzMCA2MEwwIDMwTDMwIDBaIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wMikiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==')] bg-repeat opacity-50"></div>
+<div className="absolute inset-0 bg-glow-1 pointer-events-none"></div>
+<div className="absolute inset-0 bg-glow-2 pointer-events-none"></div>
+<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1440px] h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMzAgMEw2MCAzMEwzMCA2MEwwIDMwTDMwIDBaIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wMikiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==')] bg-repeat opacity-30"></div>
 </div>
 
-<main className="w-full max-w-[520px] relative z-10">
-<div className="text-center mb-lg">
-<h1 className="font-headline-xl text-headline-xl text-primary mb-xs tracking-tight">NeoVault</h1>
+<main className="w-full max-w-[520px] relative z-10 px-margin-mobile md:px-0">
+<div className="text-center mb-lg mt-8 md:mt-0">
+<h1 className="font-headline-xl text-headline-xl text-primary mb-xs tracking-tight drop-shadow-[0_0_15px_rgba(164,230,255,0.4)]">NeoVault</h1>
 <p className="font-body-lg text-body-lg text-on-surface-variant">Initialize your secure environment.</p>
 </div>
-<div className="glass-card rounded-xl p-md md:p-lg w-full">
-<div className="mb-lg">
+<div className="glass-card rounded-xl p-md md:p-lg w-full shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+<div className="mb-lg text-center md:text-left">
 <h2 className="font-headline-md text-headline-md text-on-surface mb-xs">Create Account</h2>
 <p className="font-body-sm text-body-sm text-on-surface-variant">Enter your details to establish a secure access node.</p>
 </div>
 {error && (
-  <div className="mb-4 p-3 rounded bg-error/10 border border-error/50 text-error font-body-sm text-center">
+  <div className="mb-4 p-3 rounded bg-error/10 border border-error/50 text-error font-body-sm text-center flex items-center justify-center gap-2">
+    <span className="material-symbols-outlined text-[18px]">error</span>
     {error}
   </div>
 )}
@@ -105,7 +106,7 @@ export default function Register() {
 
 <div className="flex items-start gap-sm pt-xs">
 <div className="flex items-center h-5">
-<input className="w-4 h-4 rounded border-outline-variant bg-surface-container-low text-primary focus:ring-primary focus:ring-offset-surface" id="terms" type="checkbox" />
+<input className="w-4 h-4 rounded border-outline-variant bg-surface-container-low text-primary focus:ring-primary focus:ring-offset-surface" id="terms" type="checkbox" required />
 </div>
 <div className="text-sm">
 <label className="font-body-sm text-body-sm text-on-surface-variant" htmlFor="terms">I agree to the <a className="text-primary hover:underline hover:text-primary-fixed" href="#">Terms of Service</a> and <a className="text-primary hover:underline hover:text-primary-fixed" href="#">Privacy Policy</a>.</label>
@@ -113,9 +114,13 @@ export default function Register() {
 </div>
 
 <div className="pt-sm">
-<button disabled={isSubmitting} className="neon-btn w-full py-sm rounded-lg flex items-center justify-center gap-sm font-label-md text-label-md text-on-primary disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+<button disabled={isSubmitting} className="glow-btn w-full py-sm rounded-lg flex items-center justify-center gap-sm font-label-md text-label-md text-on-primary disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
 <span className="font-bold">{isSubmitting ? 'Processing...' : 'Create Account'}</span>
-<span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+{isSubmitting ? (
+  <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+) : (
+  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+)}
 </button>
 </div>
 </form>
