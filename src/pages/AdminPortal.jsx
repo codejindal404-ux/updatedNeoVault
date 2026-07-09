@@ -14,18 +14,65 @@ export default function AdminPortal() {
   
   const [activeTab, setActiveTab] = useState('personnel'); // 'personnel', 'documents', 'logs'
 
+  // User Filtering & Pagination State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [verifiedFilter, setVerifiedFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // User Details State
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+
+  // Debounce Search
   useEffect(() => {
-    const fetchAdminData = async () => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch Users specifically (triggered by filters/pagination)
+  useEffect(() => {
+    const fetchUsers = async () => {
       try {
-        const [statsRes, usersRes, docsRes, logsRes, alertsRes] = await Promise.all([
+        const res = await api.get('/admin/users', {
+          params: {
+            search: debouncedSearch,
+            status: statusFilter,
+            verified: verifiedFilter,
+            role: roleFilter,
+            page: currentPage,
+            per_page: 10
+          }
+        });
+        setUsers(res.data.users);
+        setTotalPages(res.data.total_pages);
+        setTotalUsers(res.data.total_count);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
+    };
+    fetchUsers();
+  }, [debouncedSearch, statusFilter, verifiedFilter, roleFilter, currentPage]);
+
+  // Fetch Dashboard Stats (Runs once)
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [statsRes, docsRes, logsRes, alertsRes] = await Promise.all([
           api.get('/admin/stats'),
-          api.get('/admin/users'),
           api.get('/admin/documents'),
           api.get('/admin/logs'),
           api.get('/admin/security-alerts')
         ]);
         setStats(statsRes.data);
-        setUsers(usersRes.data.users);
         setDocuments(docsRes.data.documents);
         setLogs(logsRes.data.logs);
         setAlerts(alertsRes.data.alerts);
@@ -37,8 +84,28 @@ export default function AdminPortal() {
       }
     };
     
-    fetchAdminData();
+    fetchDashboardData();
   }, []);
+
+  // Fetch User Details
+  useEffect(() => {
+    if (!selectedUserId) {
+      setUserDetails(null);
+      return;
+    }
+    const fetchDetails = async () => {
+      setIsDetailsLoading(true);
+      try {
+        const res = await api.get(`/admin/users/${selectedUserId}/details`);
+        setUserDetails(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user details:", err);
+      } finally {
+        setIsDetailsLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [selectedUserId]);
 
   const handleToggleAdmin = async (userId, currentIsAdmin) => {
     const action = currentIsAdmin ? 'revoke' : 'grant';
@@ -48,9 +115,29 @@ export default function AdminPortal() {
       await api.put(`/admin/users/${userId}/toggle-admin`);
       // Update local state
       setUsers(users.map(u => u.id === userId ? { ...u, is_admin: !currentIsAdmin } : u));
+      if (userDetails && userDetails.id === userId) {
+        setUserDetails({...userDetails, is_admin: !currentIsAdmin});
+      }
     } catch (err) {
       console.error("Toggle admin error:", err);
       alert(err.response?.data?.error || "Failed to toggle admin status");
+    }
+  };
+
+  const handleToggleStatus = async (userId, currentIsActive) => {
+    const action = currentIsActive ? 'deactivate' : 'activate';
+    if (!window.confirm(`Are you sure you want to ${action} this user?`)) return;
+    
+    try {
+      await api.patch(`/admin/users/${userId}/toggle-status`);
+      // Update local state
+      setUsers(users.map(u => u.id === userId ? { ...u, is_active: !currentIsActive } : u));
+      if (userDetails && userDetails.id === userId) {
+        setUserDetails({...userDetails, is_active: !currentIsActive});
+      }
+    } catch (err) {
+      console.error("Toggle status error:", err);
+      alert(err.response?.data?.error || "Failed to toggle user status");
     }
   };
 
@@ -246,9 +333,43 @@ export default function AdminPortal() {
               </button>
             </div>
 
-            <div className="p-0 overflow-x-auto">
+            <div className="p-0">
               {activeTab === 'personnel' && (
-                <table className="w-full text-left border-collapse">
+                <div className="flex flex-col">
+                  {/* Search and Filters */}
+                  <div className="p-4 border-b border-white/5 bg-surface-container/20 flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="relative w-full md:w-1/3">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                      <input 
+                        type="text" 
+                        placeholder="Search by email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-surface-container border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-on-surface focus:border-primary focus:outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                      <select 
+                        value={statusFilter} onChange={(e) => {setStatusFilter(e.target.value); setCurrentPage(1);}}
+                        className="bg-surface-container border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                      <select 
+                        value={roleFilter} onChange={(e) => {setRoleFilter(e.target.value); setCurrentPage(1);}}
+                        className="bg-surface-container border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+                      >
+                        <option value="all">All Roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/5 bg-surface-container/30">
                       <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase font-normal">User ID / Name</th>
@@ -288,29 +409,65 @@ export default function AdminPortal() {
                           {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <button 
-                            onClick={() => handleToggleAdmin(user.id, user.is_admin)}
-                            className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${
-                              user.is_admin 
-                                ? 'border-error/30 text-error hover:bg-error/10' 
-                                : 'border-secondary/30 text-secondary hover:bg-secondary/10'
-                            }`}
-                          >
-                            {user.is_admin ? 'Remove Admin' : 'Make Admin'}
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => setSelectedUserId(user.id)}
+                              className="px-2 py-1 rounded text-xs font-medium border border-tertiary/30 text-tertiary hover:bg-tertiary/10 transition-colors flex items-center gap-1"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">visibility</span>
+                              Details
+                            </button>
+                            <button 
+                              onClick={() => handleToggleAdmin(user.id, user.is_admin)}
+                              className={`px-2 py-1 rounded text-xs font-medium border transition-colors ${
+                                user.is_admin 
+                                  ? 'border-error/30 text-error hover:bg-error/10' 
+                                  : 'border-secondary/30 text-secondary hover:bg-secondary/10'
+                              }`}
+                            >
+                              {user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="5" className="py-8 text-center text-on-surface-variant">No users found</td>
+                        <td colSpan="5" className="py-8 text-center text-on-surface-variant">No users found matching your criteria.</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between p-4 border-t border-white/5 bg-surface-container/20">
+                    <div className="text-sm text-on-surface-variant">
+                      Showing page {currentPage} of {totalPages}
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => p - 1)}
+                        className="px-3 py-1 rounded border border-white/10 text-on-surface hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button 
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(p => p + 1)}
+                        className="px-3 py-1 rounded border border-white/10 text-on-surface hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </div>
               )}
 
               {activeTab === 'documents' && (
-                <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/5 bg-surface-container/30">
                       <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase font-normal">Document ID</th>
@@ -349,10 +506,12 @@ export default function AdminPortal() {
                     )}
                   </tbody>
                 </table>
+                </div>
               )}
 
               {activeTab === 'logs' && (
-                <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/5 bg-surface-container/30">
                       <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase font-normal">Log ID</th>
@@ -384,10 +543,12 @@ export default function AdminPortal() {
                     )}
                   </tbody>
                 </table>
+                </div>
               )}
 
               {activeTab === 'alerts' && (
-                <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/5 bg-surface-container/30">
                       <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase font-normal">Alert ID</th>
@@ -423,11 +584,133 @@ export default function AdminPortal() {
                     )}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           </div>
         </main>
       </div>
+
+      {/* User Details Slideover Modal */}
+      {selectedUserId && (
+        <div className="fixed inset-0 z-[60] flex justify-end">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedUserId(null)}></div>
+          
+          {/* Slideover Panel */}
+          <div className="relative w-full max-w-md h-full bg-surface border-l border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-surface-container/50">
+              <h2 className="font-headline-sm text-on-surface flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">manage_accounts</span>
+                User Details
+              </h2>
+              <button onClick={() => setSelectedUserId(null)} className="text-on-surface-variant hover:text-on-surface">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              {isDetailsLoading || !userDetails ? (
+                <div className="flex justify-center items-center h-40">
+                  <span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="flex items-start gap-4">
+                    <div className={`w-14 h-14 rounded-xl ${userDetails.is_admin ? 'bg-secondary/20 text-secondary' : 'bg-primary/20 text-primary'} flex items-center justify-center font-headline-md font-bold shrink-0`}>
+                      {userDetails.email.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-title-md text-on-surface truncate">{userDetails.email}</h3>
+                      <p className="text-sm text-on-surface-variant mb-2">ID: {userDetails.id} • Joined {new Date(userDetails.created_at).toLocaleDateString()}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {userDetails.is_admin && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary/20 text-secondary border border-secondary/30">Admin</span>}
+                        {userDetails.is_active ? 
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-tertiary/20 text-tertiary border border-tertiary/30">Active</span> : 
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-error/20 text-error border border-error/30">Suspended</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/5">
+                    <button 
+                      onClick={() => handleToggleAdmin(userDetails.id, userDetails.is_admin)}
+                      className="px-3 py-2 rounded-lg text-sm font-medium border border-white/10 hover:bg-white/5 transition-colors flex justify-center items-center gap-2 text-on-surface"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">{userDetails.is_admin ? 'remove_moderator' : 'add_moderator'}</span>
+                      {userDetails.is_admin ? 'Demote Admin' : 'Make Admin'}
+                    </button>
+                    <button 
+                      onClick={() => handleToggleStatus(userDetails.id, userDetails.is_active)}
+                      className="px-3 py-2 rounded-lg text-sm font-medium border border-white/10 hover:bg-white/5 transition-colors flex justify-center items-center gap-2 text-on-surface"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">{userDetails.is_active ? 'block' : 'check_circle'}</span>
+                      {userDetails.is_active ? 'Suspend User' : 'Activate User'}
+                    </button>
+                  </div>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-surface-container rounded-xl p-4 border border-white/5">
+                      <div className="text-on-surface-variant text-xs font-label-caps uppercase mb-1">Documents</div>
+                      <div className="text-2xl font-bold text-on-surface">{userDetails.document_count}</div>
+                    </div>
+                    <div className="bg-surface-container rounded-xl p-4 border border-white/5">
+                      <div className="text-on-surface-variant text-xs font-label-caps uppercase mb-1">Vault Entries</div>
+                      <div className="text-2xl font-bold text-on-surface">{userDetails.vault_entry_count}</div>
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div>
+                    <h4 className="font-label-md text-on-surface-variant uppercase mb-3">Recent Activity</h4>
+                    {userDetails.recent_activity.length > 0 ? (
+                      <div className="space-y-3">
+                        {userDetails.recent_activity.map(log => (
+                          <div key={log.id} className="flex gap-3 text-sm">
+                            <span className="material-symbols-outlined text-primary text-[18px] shrink-0">history</span>
+                            <div>
+                              <div className="text-on-surface font-mono text-xs">{log.action}</div>
+                              <div className="text-on-surface-variant text-[11px] mt-0.5">{new Date(log.timestamp).toLocaleString()} • {log.ip_address}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-on-surface-variant italic">No recent activity.</div>
+                    )}
+                  </div>
+
+                  {/* Recent Scans */}
+                  <div>
+                    <h4 className="font-label-md text-on-surface-variant uppercase mb-3">Recent URL Scans</h4>
+                    {userDetails.recent_scans.length > 0 ? (
+                      <div className="space-y-3">
+                        {userDetails.recent_scans.map(scan => (
+                          <div key={scan.id} className="flex gap-3 text-sm">
+                            <span className={`material-symbols-outlined text-[18px] shrink-0 ${scan.verdict === 'Safe' ? 'text-tertiary' : 'text-error'}`}>
+                              {scan.verdict === 'Safe' ? 'verified_user' : 'gpp_bad'}
+                            </span>
+                            <div className="overflow-hidden">
+                              <div className="text-on-surface truncate" title={scan.url}>{scan.url}</div>
+                              <div className="text-on-surface-variant text-[11px] mt-0.5">{new Date(scan.scanned_at).toLocaleString()}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-on-surface-variant italic">No recent scans.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
