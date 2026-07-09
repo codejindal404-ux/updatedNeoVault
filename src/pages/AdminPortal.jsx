@@ -1,7 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 
 export default function AdminPortal() {
+  const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const [statsRes, usersRes] = await Promise.all([
+          api.get('/admin/stats'),
+          api.get('/admin/users')
+        ]);
+        setStats(statsRes.data);
+        setUsers(usersRes.data.users);
+      } catch (err) {
+        console.error("Admin data fetch error:", err);
+        setError(err.response?.data?.error || err.message || "Failed to load admin data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAdminData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="font-headline-md text-primary animate-pulse flex items-center gap-3">
+          <span className="material-symbols-outlined animate-spin">refresh</span>
+          Loading Admin Portal...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="font-headline-md text-error bg-error/10 p-6 rounded-xl border border-error/20 flex items-center gap-3">
+          <span className="material-symbols-outlined">error</span>
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
 
@@ -85,10 +133,10 @@ export default function AdminPortal() {
 <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Users</span>
 <span className="material-symbols-outlined text-primary">group</span>
 </div>
-<div className="font-headline-xl text-headline-xl text-on-surface text-glow mb-1">24,592</div>
+<div className="font-headline-xl text-headline-xl text-on-surface text-glow mb-1">{stats?.total_users || 0}</div>
 <div className="flex items-center gap-1 text-tertiary font-label-md text-label-md">
-<span className="material-symbols-outlined text-[14px]">trending_up</span>
-<span>+12.5% this week</span>
+<span className="material-symbols-outlined text-[14px]">verified</span>
+<span>Verified: {stats?.verified_users || 0}</span>
 </div>
 </div>
 
@@ -98,10 +146,10 @@ export default function AdminPortal() {
 <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Uploads</span>
 <span className="material-symbols-outlined text-secondary">cloud_upload</span>
 </div>
-<div className="font-headline-xl text-headline-xl text-on-surface mb-1">1.2M</div>
+<div className="font-headline-xl text-headline-xl text-on-surface mb-1">{stats?.total_documents || 0}</div>
 <div className="flex items-center gap-1 text-tertiary font-label-md text-label-md">
-<span className="material-symbols-outlined text-[14px]">trending_up</span>
-<span>+5.2% this week</span>
+<span className="material-symbols-outlined text-[14px]">folder_managed</span>
+<span>Vault Entries: {stats?.total_vault_entries || 0}</span>
 </div>
 </div>
 
@@ -158,75 +206,45 @@ export default function AdminPortal() {
 </tr>
 </thead>
 <tbody className="font-body-sm text-body-sm">
-<tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
+{users.length > 0 ? users.map((user) => (
+<tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
 <td className="py-4 px-6">
 <div className="flex items-center gap-3">
-<div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary font-bold">JD</div>
+<div className={`w-8 h-8 rounded ${user.is_admin ? 'bg-secondary/20 text-secondary' : 'bg-primary/20 text-primary'} flex items-center justify-center font-bold`}>
+{user.email.substring(0, 2).toUpperCase()}
+</div>
 <div>
-<div className="text-on-surface font-medium">J. Doe</div>
-<div className="text-on-surface-variant text-xs">US-EAST-1</div>
+<div className="text-on-surface font-medium">{user.email}</div>
+<div className="text-on-surface-variant text-xs">ID: {user.id}</div>
 </div>
 </div>
 </td>
-<td className="py-4 px-6 text-on-surface-variant">SysAdmin</td>
+<td className="py-4 px-6 text-on-surface-variant">{user.is_admin ? 'Admin' : 'User'}</td>
 <td className="py-4 px-6">
+{user.is_active ? (
 <span className="inline-flex items-center px-2 py-1 rounded status-safe font-label-caps text-label-caps border border-tertiary/20">
 <span className="w-1.5 h-1.5 rounded-full bg-tertiary mr-1.5 shadow-[0_0_5px_#68f5b8]"></span> Active
-                                    </span>
-</td>
-<td className="py-4 px-6 text-on-surface-variant">2 mins ago</td>
-<td className="py-4 px-6 text-right">
-<button className="text-on-surface-variant hover:text-primary transition-colors p-1">
-<span className="material-symbols-outlined text-[18px]">edit</span>
-</button>
-</td>
-</tr>
-<tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
-<td className="py-4 px-6">
-<div className="flex items-center gap-3">
-<div className="w-8 h-8 rounded bg-secondary/20 flex items-center justify-center text-secondary font-bold">AS</div>
-<div>
-<div className="text-on-surface font-medium">A. Smith</div>
-<div className="text-on-surface-variant text-xs">EU-WEST-2</div>
-</div>
-</div>
-</td>
-<td className="py-4 px-6 text-on-surface-variant">Analyst</td>
-<td className="py-4 px-6">
-<span className="inline-flex items-center px-2 py-1 rounded status-safe font-label-caps text-label-caps border border-tertiary/20">
-<span className="w-1.5 h-1.5 rounded-full bg-tertiary mr-1.5 shadow-[0_0_5px_#68f5b8]"></span> Active
-                                    </span>
-</td>
-<td className="py-4 px-6 text-on-surface-variant">14 mins ago</td>
-<td className="py-4 px-6 text-right">
-<button className="text-on-surface-variant hover:text-primary transition-colors p-1">
-<span className="material-symbols-outlined text-[18px]">edit</span>
-</button>
-</td>
-</tr>
-<tr className="hover:bg-white/5 transition-colors">
-<td className="py-4 px-6">
-<div className="flex items-center gap-3">
-<div className="w-8 h-8 rounded bg-error/20 flex items-center justify-center text-error font-bold">RW</div>
-<div>
-<div className="text-on-surface font-medium">R. Williams</div>
-<div className="text-on-surface-variant text-xs">AP-SOUTH-1</div>
-</div>
-</div>
-</td>
-<td className="py-4 px-6 text-on-surface-variant">Contractor</td>
-<td className="py-4 px-6">
+</span>
+) : (
 <span className="inline-flex items-center px-2 py-1 rounded status-danger font-label-caps text-label-caps border border-error/20">
 <span className="w-1.5 h-1.5 rounded-full bg-error mr-1.5 shadow-[0_0_5px_#ffb4ab]"></span> Suspended
-                                    </span>
+</span>
+)}
 </td>
-<td className="py-4 px-6 text-on-surface-variant">2 days ago</td>
+<td className="py-4 px-6 text-on-surface-variant">
+{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+</td>
 <td className="py-4 px-6 text-right">
 <button className="text-on-surface-variant hover:text-primary transition-colors p-1">
 <span className="material-symbols-outlined text-[18px]">edit</span>
 </button>
 </td>
 </tr>
+)) : (
+<tr>
+<td colSpan="5" className="py-4 px-6 text-center text-on-surface-variant">No users found</td>
+</tr>
+)}
 </tbody>
 </table>
 </div>
