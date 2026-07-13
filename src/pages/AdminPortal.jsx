@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import logger from '../services/logger';
 import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function AdminPortal() {
@@ -56,7 +57,7 @@ export default function AdminPortal() {
         setTotalPages(res.data.total_pages);
         setTotalUsers(res.data.total_count);
       } catch (err) {
-        console.error("Failed to fetch users:", err);
+        logger.error("Failed to fetch users:", err);
       }
     };
     fetchUsers();
@@ -77,7 +78,7 @@ export default function AdminPortal() {
         setLogs(logsRes.data.logs);
         setAlerts(alertsRes.data.alerts);
       } catch (err) {
-        console.error("Admin data fetch error:", err);
+        logger.error("Admin data fetch error:", err);
         setError(err.response?.data?.error || err.message || "Failed to load admin data");
       } finally {
         setLoading(false);
@@ -99,7 +100,7 @@ export default function AdminPortal() {
         const res = await api.get(`/admin/users/${selectedUserId}/details`);
         setUserDetails(res.data);
       } catch (err) {
-        console.error("Failed to fetch user details:", err);
+        logger.error("Failed to fetch user details:", err);
       } finally {
         setIsDetailsLoading(false);
       }
@@ -119,7 +120,7 @@ export default function AdminPortal() {
         setUserDetails({...userDetails, is_admin: !currentIsAdmin});
       }
     } catch (err) {
-      console.error("Toggle admin error:", err);
+      logger.error("Toggle admin error:", err);
       alert(err.response?.data?.error || "Failed to toggle admin status");
     }
   };
@@ -136,7 +137,7 @@ export default function AdminPortal() {
         setUserDetails({...userDetails, is_active: !currentIsActive});
       }
     } catch (err) {
-      console.error("Toggle status error:", err);
+      logger.error("Toggle status error:", err);
       alert(err.response?.data?.error || "Failed to toggle user status");
     }
   };

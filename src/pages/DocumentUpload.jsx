@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api.js';
+import logger from '../services/logger';
 import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function DocumentUpload() {
@@ -31,7 +32,7 @@ export default function DocumentUpload() {
       const response = await api.get('/documents');
       setDocuments(response.data);
     } catch (err) {
-      console.error('Failed to fetch documents:', err);
+      logger.error('Failed to fetch documents:', err);
     }
   };
 
@@ -109,7 +110,7 @@ export default function DocumentUpload() {
       await api.delete(`/documents/${id}`);
       fetchDocuments();
     } catch (err) {
-      console.error('Failed to delete document:', err);
+      logger.error('Failed to delete document:', err);
       alert('Failed to delete document. Please try again.');
     }
   };
@@ -125,7 +126,7 @@ export default function DocumentUpload() {
       const response = await api.get(`/documents/${id}`);
       setDocDetails(response.data);
     } catch (err) {
-      console.error('Failed to fetch document details:', err);
+      logger.error('Failed to fetch document details:', err);
     } finally {
       setIsLoadingDetails(false);
     }
@@ -157,7 +158,7 @@ export default function DocumentUpload() {
       
       setVaultSaveSuccess(true);
     } catch (err) {
-      console.error('Failed to save to vault:', err);
+      logger.error('Failed to save to vault:', err);
       setVaultSaveError(err.response?.data?.error || 'Failed to save to Vault. Please try again.');
     } finally {
       setIsSavingToVault(false);

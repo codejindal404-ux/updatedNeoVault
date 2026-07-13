@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import logger from '../services/logger';
 
 const DEFAULTS = {
   darkMode: true,
@@ -107,7 +108,7 @@ export default function SystemSettings() {
         setRealEmailNotifications(meRes.data.email_notifications_enabled);
         setLoginHistory(historyRes.data.login_history);
       } catch (err) {
-        console.error("Failed to fetch real settings data", err);
+        logger.error("Failed to fetch real settings data", err);
       } finally {
         setHistoryLoading(false);
       }
@@ -160,7 +161,7 @@ export default function SystemSettings() {
       setLoginHistory([]);
       setShowClearModal(false);
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to clear activity log:', err);
     } finally {
       setClearLoading(false);
     }
@@ -178,7 +179,7 @@ export default function SystemSettings() {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Export failed", err);
+      logger.error("Export failed", err);
     }
   };
 

@@ -23,9 +23,9 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('neovault_token');
-      localStorage.removeItem('neovault_user');
-      window.location.href = '/login';
+      // Dispatch a custom event so AuthContext can handle logout through React state
+      // instead of directly mutating localStorage and forcing a hard page reload.
+      window.dispatchEvent(new Event('neovault-auth-logout'));
     }
     return Promise.reject(error);
   }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import logger from '../services/logger';
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function NotificationDropdown() {
         const response = await api.get('/auth/notifications');
         setNotifications(response.data.notifications || []);
       } catch (err) {
-        console.error("Failed to fetch notifications:", err);
+        logger.error("Failed to fetch notifications:", err);
       } finally {
         setLoading(false);
       }
@@ -61,6 +62,17 @@ export default function NotificationDropdown() {
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  /** Mask the last octet of an IPv4 address for privacy (e.g. 192.168.1.xxx) */
+  const maskIp = (ip) => {
+    if (!ip) return null;
+    const parts = ip.split('.');
+    if (parts.length === 4) {
+      return `${parts[0]}.${parts[1]}.${parts[2]}.xxx`;
+    }
+    // IPv6 or other — show first segment only
+    return ip.split(':').slice(0, 3).join(':') + ':…';
   };
 
   return (
@@ -111,7 +123,7 @@ export default function NotificationDropdown() {
                           </span>
                         </div>
                         <p className="text-xs text-on-surface-variant truncate">
-                          {notif.ip_address ? `IP: ${notif.ip_address}` : 'System generated event'}
+                          {notif.ip_address ? `IP: ${maskIp(notif.ip_address)}` : 'System generated event'}
                         </p>
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import logger from '../services/logger';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function ResetPassword() {
       setSuccessMsg(response.data.message || 'OTP reset code sent to your email.');
       setStep(2);
     } catch (err) {
-      console.error("Forgot password request error:", err);
+      logger.error("Forgot password request error:", err);
       setError(err.response?.data?.error || err.message || 'Failed to send reset code.');
     } finally {
       setLoading(false);
@@ -62,7 +63,7 @@ export default function ResetPassword() {
       });
       navigate('/login', { state: { message: response.data.message || 'Password reset successfully. Please log in.' } });
     } catch (err) {
-      console.error("Reset password submission error:", err);
+      logger.error("Reset password submission error:", err);
       setError(err.response?.data?.error || err.message || 'Failed to reset password.');
     } finally {
       setLoading(false);

@@ -1,12 +1,31 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import logger from '../services/logger';
 import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function FormAutofill() {
   const [fieldsData, setFieldsData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [revealedFields, setRevealedFields] = useState(new Set());
+
+  const toggleReveal = (key) => {
+    setRevealedFields(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const maskValue = (value) => {
+    if (!value) return '••••';
+    const str = String(value);
+    if (str.length <= 4) return '•'.repeat(str.length);
+    return '•'.repeat(str.length - 4) + str.slice(-4);
+  };
 
   const loadVaultData = async () => {
     setLoading(true);
@@ -15,7 +34,7 @@ export default function FormAutofill() {
       const response = await api.get('/autofill/get-data');
       setFieldsData(response.data.data);
     } catch (err) {
-      console.error("Error loading vault data:", err);
+      logger.error("Error loading vault data:", err);
       setError(err.response?.data?.error || err.message || "Failed to load vault data");
     } finally {
       setLoading(false);
@@ -177,13 +196,26 @@ export default function FormAutofill() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {validFields.map(([key, value]) => (
                             <div key={key} className="flex justify-between items-center p-3 rounded-lg bg-surface-container-low border border-white/5">
-                                <div>
+                                <div className="flex-grow min-w-0 pr-2">
                                     <span className="block font-label-caps text-label-caps text-outline mb-1">
                                       {getHumanReadableLabel(key)}
                                     </span>
-                                    <span className="font-body-md text-body-md text-on-surface">{value}</span>
+                                    <span className="font-body-md text-body-md text-on-surface block truncate">
+                                      {revealedFields.has(key) ? value : maskValue(value)}
+                                    </span>
                                 </div>
-                                <span className="material-symbols-outlined text-tertiary text-[20px]">task_alt</span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <button 
+                                      onClick={() => toggleReveal(key)} 
+                                      className="text-on-surface-variant hover:text-primary transition-colors p-1"
+                                      title={revealedFields.has(key) ? "Hide value" : "Reveal value"}
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">
+                                        {revealedFields.has(key) ? "visibility_off" : "visibility"}
+                                      </span>
+                                    </button>
+                                    <span className="material-symbols-outlined text-tertiary text-[20px]">task_alt</span>
+                                </div>
                             </div>
                         ))}
                     </div>

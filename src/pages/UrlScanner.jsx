@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import logger from '../services/logger';
 import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function UrlScanner() {
@@ -8,6 +9,7 @@ export default function UrlScanner() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showExtensionTip, setShowExtensionTip] = useState(false);
 
   const handleScan = async () => {
     if (!url.trim()) {
@@ -22,11 +24,18 @@ export default function UrlScanner() {
       const response = await api.post('/scanner/check-url', { url: url.trim() });
       setResult(response.data);
     } catch (err) {
-      console.error('Scan error:', err);
+      logger.error('Scan error:', err);
       setError(err.response?.data?.error || err.message || 'Failed to scan the URL.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenAndAutofill = () => {
+    window.open(url, '_blank');
+    setShowExtensionTip(true);
+    // Auto-hide the tip after 6 seconds
+    setTimeout(() => setShowExtensionTip(false), 6000);
   };
 
   const getScoreColor = (score) => {
@@ -221,6 +230,27 @@ export default function UrlScanner() {
                       <p className="font-label-caps text-label-caps text-on-surface-variant mb-1">Target URL</p>
                       <p className={`font-body-md text-body-md truncate max-w-sm text-${getScoreColor(result.safety_score)}`}>{url}</p>
                     </div>
+                    {/* Open & Autofill button — only shown when verdict is Safe */}
+                    {result.verdict === 'Safe' && (
+                      <div className="flex flex-col items-end gap-2">
+                        <button
+                          onClick={handleOpenAndAutofill}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-tertiary/10 border border-tertiary-fixed/30 text-tertiary-fixed font-body-md text-body-md font-semibold hover:bg-tertiary/20 active:scale-[0.97] transition-all"
+                          title="Open URL and autofill with NeoVault extension"
+                        >
+                          <span className="material-symbols-outlined text-sm" data-icon="open_in_new" style={{fontVariationSettings: "'FILL' 1"}}>open_in_new</span>
+                          Open &amp; Autofill
+                        </button>
+                        {showExtensionTip && (
+                          <div className="flex items-start gap-2 bg-primary/5 border border-primary/15 rounded-lg px-3 py-2 max-w-[220px] text-right animate-fade-in">
+                            <span className="material-symbols-outlined text-primary text-xs mt-0.5" style={{fontSize: '14px', fontVariationSettings: "'FILL' 1"}}>extension</span>
+                            <p className="font-label-sm text-label-sm text-on-surface-variant leading-relaxed">
+                              Make sure the <span className="text-primary font-semibold">NeoVault extension</span> is installed and you&apos;re logged in within it.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="glass-panel rounded-2xl p-8 flex-1">

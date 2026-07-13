@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../services/api.js';
+import logger from '../services/logger';
 import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function Dashboard() {
@@ -16,7 +17,7 @@ export default function Dashboard() {
         const response = await api.get('/auth/dashboard-stats');
         setStats(response.data);
       } catch (err) {
-        console.error("Failed to load dashboard stats:", err);
+        logger.error("Failed to load dashboard stats:", err);
         setError("Could not load stats data.");
       } finally {
         setLoading(false);
@@ -27,6 +28,14 @@ export default function Dashboard() {
   }, []);
 
   const username = user?.email ? user.email.split('@')[0] : 'User';
+
+  /** Mask the last octet of an IPv4 address for privacy */
+  const maskIp = (ip) => {
+    if (!ip) return '';
+    const parts = ip.split('.');
+    if (parts.length === 4) return `${parts[0]}.${parts[1]}.${parts[2]}.xxx`;
+    return ip.split(':').slice(0, 3).join(':') + ':…';
+  };
 
   return (
     <>
@@ -318,7 +327,7 @@ export default function Dashboard() {
                               <h4 className="font-body-sm text-on-surface group-hover:text-primary transition-colors">{details.title}</h4>
                               <span className="font-label-md text-[10px] text-on-surface-variant">{timeAgo(log.timestamp)}</span>
                             </div>
-                            <p className="font-label-md text-on-surface-variant text-xs">{details.desc} {log.ip_address || ''}</p>
+                            <p className="font-label-md text-on-surface-variant text-xs">{details.desc} {maskIp(log.ip_address)}</p>
                           </div>
                         </div>
                       );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api.js';
+import logger from '../services/logger';
 import NotificationDropdown from '../components/NotificationDropdown.jsx';
 
 export default function IdentityVault() {
@@ -12,6 +13,26 @@ export default function IdentityVault() {
   const [newField, setNewField] = useState({ field_name: '', field_value: '', category: 'other' });
   const [isSaving, setIsSaving] = useState(false);
 
+  // Track which vault entry IDs have their values revealed
+  const [revealedIds, setRevealedIds] = useState(new Set());
+
+  const toggleReveal = (id) => {
+    setRevealedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  /** Mask sensitive values: show •••• + last 4 chars (or full mask if < 5 chars) */
+  const maskValue = (value) => {
+    if (!value) return '••••';
+    const str = String(value);
+    if (str.length <= 4) return '•'.repeat(str.length);
+    return '•'.repeat(str.length - 4) + str.slice(-4);
+  };
+
   useEffect(() => {
     fetchVaultEntries();
   }, []);
@@ -21,7 +42,7 @@ export default function IdentityVault() {
       const response = await api.get('/vault');
       setEntries(response.data);
     } catch (err) {
-      console.error('Failed to fetch vault entries:', err);
+      logger.error('Failed to fetch vault entries:', err);
       setError('Failed to load vault entries.');
     } finally {
       setIsLoading(false);
@@ -34,7 +55,7 @@ export default function IdentityVault() {
       await api.delete(`/vault/${id}`);
       fetchVaultEntries();
     } catch (err) {
-      console.error('Failed to delete vault entry:', err);
+      logger.error('Failed to delete vault entry:', err);
       alert('Failed to delete vault entry. Please try again.');
     }
   };
@@ -52,7 +73,7 @@ export default function IdentityVault() {
       setNewField({ field_name: '', field_value: '', category: 'other' });
       fetchVaultEntries();
     } catch (err) {
-      console.error('Failed to save field:', err);
+      logger.error('Failed to save field:', err);
       alert('Failed to save custom field.');
     } finally {
       setIsSaving(false);
@@ -70,7 +91,7 @@ export default function IdentityVault() {
       link.click();
       document.body.removeChild(link);
     } catch (err) {
-      console.error('Failed to export vault:', err);
+      logger.error('Failed to export vault:', err);
       alert('Failed to export vault data.');
     }
   };
@@ -227,8 +248,13 @@ export default function IdentityVault() {
           {groupedEntries.identity.map(entry => (
             <div key={entry.id} className="group relative bg-surface-container-low rounded-lg p-3 border border-transparent hover:border-white/10 transition-colors">
               <span className="block font-label-md text-label-md text-on-surface-variant mb-1">{entry.field_name}</span>
-              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">{entry.field_value}</span>
+              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">
+                {revealedIds.has(entry.id) ? entry.field_value : maskValue(entry.field_value)}
+              </span>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 bg-surface-container-low pl-2">
+                <button onClick={() => toggleReveal(entry.id)} className="text-outline hover:text-primary transition-colors" title={revealedIds.has(entry.id) ? 'Hide value' : 'Reveal value'}>
+                  <span className="material-symbols-outlined text-[18px]">{revealedIds.has(entry.id) ? 'visibility_off' : 'visibility'}</span>
+                </button>
                 <button onClick={() => handleDelete(entry.id)} className="text-outline hover:text-error transition-colors" title="Delete">
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>
@@ -251,8 +277,13 @@ export default function IdentityVault() {
           {groupedEntries.financial.map(entry => (
             <div key={entry.id} className="group relative bg-surface-container-low rounded-lg p-3 border border-transparent hover:border-white/10 transition-colors">
               <span className="block font-label-md text-label-md text-on-surface-variant mb-1">{entry.field_name}</span>
-              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">{entry.field_value}</span>
+              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">
+                {revealedIds.has(entry.id) ? entry.field_value : maskValue(entry.field_value)}
+              </span>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 bg-surface-container-low pl-2">
+                <button onClick={() => toggleReveal(entry.id)} className="text-outline hover:text-primary transition-colors" title={revealedIds.has(entry.id) ? 'Hide value' : 'Reveal value'}>
+                  <span className="material-symbols-outlined text-[18px]">{revealedIds.has(entry.id) ? 'visibility_off' : 'visibility'}</span>
+                </button>
                 <button onClick={() => handleDelete(entry.id)} className="text-outline hover:text-error transition-colors" title="Delete">
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>
@@ -275,8 +306,13 @@ export default function IdentityVault() {
           {groupedEntries.medical.map(entry => (
             <div key={entry.id} className="group relative bg-surface-container-low rounded-lg p-3 border border-transparent hover:border-white/10 transition-colors">
               <span className="block font-label-md text-label-md text-on-surface-variant mb-1">{entry.field_name}</span>
-              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">{entry.field_value}</span>
+              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">
+                {revealedIds.has(entry.id) ? entry.field_value : maskValue(entry.field_value)}
+              </span>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 bg-surface-container-low pl-2">
+                <button onClick={() => toggleReveal(entry.id)} className="text-outline hover:text-primary transition-colors" title={revealedIds.has(entry.id) ? 'Hide value' : 'Reveal value'}>
+                  <span className="material-symbols-outlined text-[18px]">{revealedIds.has(entry.id) ? 'visibility_off' : 'visibility'}</span>
+                </button>
                 <button onClick={() => handleDelete(entry.id)} className="text-outline hover:text-error transition-colors" title="Delete">
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>
@@ -299,8 +335,13 @@ export default function IdentityVault() {
           {groupedEntries.other.map(entry => (
             <div key={entry.id} className="group relative bg-surface-container-low rounded-lg p-3 border border-transparent hover:border-white/10 transition-colors">
               <span className="block font-label-md text-label-md text-on-surface-variant mb-1">{entry.field_name}</span>
-              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">{entry.field_value}</span>
+              <span className="block font-body-md text-body-md text-on-surface font-medium truncate">
+                {revealedIds.has(entry.id) ? entry.field_value : maskValue(entry.field_value)}
+              </span>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 bg-surface-container-low pl-2">
+                <button onClick={() => toggleReveal(entry.id)} className="text-outline hover:text-primary transition-colors" title={revealedIds.has(entry.id) ? 'Hide value' : 'Reveal value'}>
+                  <span className="material-symbols-outlined text-[18px]">{revealedIds.has(entry.id) ? 'visibility_off' : 'visibility'}</span>
+                </button>
                 <button onClick={() => handleDelete(entry.id)} className="text-outline hover:text-error transition-colors" title="Delete">
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>

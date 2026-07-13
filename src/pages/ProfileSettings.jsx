@@ -121,7 +121,9 @@ export default function ProfileSettings() {
     setDeleteError(null);
     try {
       await api.delete('/auth/delete-account', { data: { confirm: 'DELETE MY ACCOUNT' } });
-      localStorage.clear();
+      // Only remove NeoVault-specific keys (don't nuke other apps' localStorage data)
+      localStorage.removeItem('neovault_token');
+      localStorage.removeItem('neovault_user');
       navigate('/login');
     } catch (err) {
       setDeleteError(err.response?.data?.error || 'Failed to delete account. Please try again.');

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api.js';
 
 const AuthContext = createContext(null);
@@ -43,12 +43,37 @@ export function AuthProvider({ children }) {
     }
   };
 
-  function logout() {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('neovault_token');
     localStorage.removeItem('neovault_user');
-  }
+  }, []);
+
+  // Fetch latest user details (/auth/me) on mount or token change to keep user state and is_admin updated
+  useEffect(() => {
+    if (token) {
+      api.get('/auth/me')
+        .then(response => {
+          const userData = response.data;
+          setUser(userData);
+          localStorage.setItem('neovault_user', JSON.stringify(userData));
+        })
+        .catch(err => {
+          // If the token is invalid, the 401 interceptor will trigger neovault-auth-logout
+        });
+    }
+  }, [token]);
+
+  // Listen for forced-logout events dispatched by the api.js 401 interceptor.
+  // This keeps React state and localStorage in sync without a hard page reload.
+  useEffect(() => {
+    const handleForcedLogout = () => {
+      logout();
+    };
+    window.addEventListener('neovault-auth-logout', handleForcedLogout);
+    return () => window.removeEventListener('neovault-auth-logout', handleForcedLogout);
+  }, [logout]);
 
   return (
     <AuthContext.Provider value={{ token, user, isAuthenticated: !!token, login, register, verifyOtp, logout }}>
