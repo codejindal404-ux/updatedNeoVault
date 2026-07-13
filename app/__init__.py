@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request as flask_request
 from app.config import config_by_name
 from app.extensions import db, migrate, jwt, bcrypt, cors, mail, limiter
 from dotenv import load_dotenv
@@ -21,8 +21,38 @@ def create_app(config_name=None):
     bcrypt.init_app(app)
     mail.init_app(app)
     limiter.init_app(app)
-    # Enable CORS for the React frontend (usually localhost:3000 or 5173 for Vite)
-    cors.init_app(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://localhost:5173"]}})
+    # Enable CORS for the React frontend and the Chrome Extension
+    cors.init_app(app, resources={r"/api/*": {
+        "origins": [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            # Allow Chrome Extension requests (origin is the extension's ID prefix)
+            # Using a broad match here for development; tighten with the real extension ID in production.
+        ],
+        "supports_credentials": True
+    }})
+
+    # Additionally allow chrome-extension:// origins via a CORS header
+    @app.after_request
+    def add_cors_headers(response):
+        origin = flask_request.environ.get('HTTP_ORIGIN', '')
+        if origin.startswith('chrome-extension://') or origin.startswith('moz-extension://'):
+            allowed_ext_id = os.environ.get('ALLOWED_EXTENSION_ID')
+            # If ALLOWED_EXTENSION_ID is configured in .env, restrict Access-Control-Allow-Origin only to that extension
+            if allowed_ext_id:
+                allowed_origin = f"chrome-extension://{allowed_ext_id}"
+                if origin == allowed_origin:
+                    response.headers['Access-Control-Allow-Origin'] = origin
+                    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+                    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+                    response.headers['Access-Control-Allow-Credentials'] = 'true'
+            else:
+                # In development mode without a configured ID, allow broad matching
+                response.headers['Access-Control-Allow-Origin'] = origin
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+                response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+                response.headers['Access-Control-Allow-Credentials'] = 'true'
+        return response
     
     # Custom 429 Rate Limit Error Handler
     @app.errorhandler(429)
